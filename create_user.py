@@ -1,10 +1,11 @@
 import argparse
 import ConfigParser
+import random
+import string
+import time
 
 from api import e24cloudClient, e24filesClient
 from config import get_access_pair
-import random
-import string
 
 
 def random_string(N):
@@ -50,6 +51,12 @@ def display_user(bucket_name, user):
         print "\n[panel]"
         print "access_key = %s" % (api['api_key'],)
         print "secret_key = %s" % (api['secret_key'],)
+
+    print "\n[duply config example]"
+    print "TARGET='s3://%s:%s@%s'" % (user['e24files']['swift']['api_id'],
+                                      user['e24files']['swift']['secret_key'],
+                                      bucket_name, )
+
     print ""
 
 
@@ -77,8 +84,13 @@ def main():
                                        phone=123456789,
                                        password=random_string(75))
 
-    user = next((x for x in panel_client.get_accounts()['users']
-                 if x['id'] == user['user']['id']), None)
+    retry_limit = 5
+    while ('e24files' not in user or not user['e24files']) and retry_limit:
+        user = next((x for x in panel_client.get_accounts()['users']
+                     if x['id'] == user['user']['id']), None)
+        time.sleep(5)
+        retry_limit -= 1
+
     if not user:
         print "ERROR: Unable to download API-keys."
         return
