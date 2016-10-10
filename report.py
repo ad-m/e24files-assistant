@@ -11,7 +11,7 @@ from config import get_access_pair
 
 def build_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("config", nargs='?', type=argparse.FileType('r'),
+    parser.add_argument("--config", nargs='?', type=argparse.FileType('r'),
                         help="INI-file with secret keys")
     parser.add_argument("--output", '-o', nargs='?', type=argparse.FileType('w'),
                         default=sys.stdout, help="Output file")

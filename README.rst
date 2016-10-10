@@ -39,7 +39,11 @@ Przykłady użycia
 ================
 
 
-Zestawienie dostępu do bucketów z poszczególnych kont: ```python report.py config.ini -o output.csv;```
+Zestawienie dostępu do bucketów z poszczególnych kont: 
+
+```
+python report.py --config=config.ini -o output.csv;
+```
 
 Utworzenie subkonta zapewniającego dodatkowego użytkownika bucketu ```test_creator```:
 
