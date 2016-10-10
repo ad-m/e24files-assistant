@@ -57,6 +57,11 @@ def display_user(bucket_name, user):
                                       user['e24files']['swift']['secret_key'],
                                       bucket_name, )
 
+    print "\n[boto] # put in ~/.boto"
+    print "[Credentials]"
+    print "aws_access_key_id = %s" % (user['e24files']['s3']['api_id'], )
+    print "aws_secret_access_key = %s" % (user['e24files']['s3']['secret_key'], )
+
     print ""
 
 
@@ -95,8 +100,6 @@ def main():
         print "ERROR: Unable to download API-keys."
         return
 
-    display_user(args.bucket_name, user)
-
     if args.user:
         bucket = files_client.get_bucket(args.bucket_name)
         print "OK: Bucket got!"
@@ -104,6 +107,9 @@ def main():
         bucket = files_client.create_bucket(args.bucket_name)
         print "OK: Bucket created!"
     bucket.add_user_grant('FULL_CONTROL', user['id'])
+
+    display_user(args.bucket_name, user)
+
     print "SUCCESS: Permission granted!"
 
 
