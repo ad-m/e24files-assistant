@@ -21,20 +21,20 @@ Instalacja
 
 Kopiowanie kodu źródłowego: 
 
-```
+``
 git clone https://github.com/ad-m/e24files-assistant
-```
+``
 
 Instalacja zależności: 
 
-```
+``
 sudo apt-get install python-pip && sudo pip install requests pydal
-```
+``
 
 Konfiguracja
 ============
 
-Do poprawnego funkcjonowania aplikacja wymaga utworzenia pliku konfiguracyjnego z danymi kluczy API do panelu administracyjnego e24cloud i kluczy e24files dla głównego konta. Format winien być zgodny z ```config.ini.example```.
+Do poprawnego funkcjonowania aplikacja wymaga utworzenia pliku konfiguracyjnego z danymi kluczy API do panelu administracyjnego e24cloud i kluczy e24files dla głównego konta. Format winien być zgodny z ``config.ini.example``.
 
 Przykłady użycia
 ================
@@ -42,24 +42,24 @@ Przykłady użycia
 
 Zestawienie dostępu do bucketów z poszczególnych kont: 
 
-```
+``
 python report.py --config=config.ini -o output.csv;
-```
+``
 
 Utworzenie subkonta zapewniającego dodatkowego użytkownika bucketu ```test_creator```:
 
-```
+``
 python create_user.py --config=config.ini test_creator --user
-```
+``
 
 Utworzenie bucketu i subkonta mu odpowiadającego:
 
-```
+``
 python create_user.py --config=config.ini test_creator 
-```
+``
 
 Należy zaznaczyć, że aplikacja ``chart_usage.py`` nie wykorzystuje oficjalnego API e24cloud, ani pliku ``config.ini```. Dane dostępowe są pobierane z strony panelu administracyjnego z wykorzystaniem nieudokumentowanego eksportu do JSON. Wobec czego wymagane jest podanie danych do głównego konta użytkownika. Przykładowe wywołanie:
 
-```
+``
 python chart_usage.py -u email@example.com -p "BestPassword" -o chart.svg -s 2015-01-01
-```
+``
