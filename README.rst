@@ -9,11 +9,12 @@ Do przesyłania plików mogą być wykorzystywane 4 protokoły. Najbardziej wiar
 
 W przypadku ``storage obiektowego`` pliki są grupowane są w tzw. bucketach (wiaderkach), które są takimi superkatalogami. Do niedawna dla każdego konta e24cloud przyznawany był jeden zestaw kluczy API, który dawał dostęp do wszystkich danych. Oznaczało to, że gdy będziemy taki klucz zostanie ujawniony zapewni on dostęp do wszystkich danych.
 
-Jednak w ostatnich miesiącach została wprowadzona możliwość tworzenia subkont. Każde subkonto posiada własne klucze API. Oznacza to, że widzi tylko własne buckety, a więc - przykładowo - włamywacz nie ma dostępu do danych aplikacji. Wydaje się jednak, że funkcja subkont nie została zaprojektowana z myślą o seperacji aplikacji, a miało to na celu seperację użytkowników. Oznacza to pewne nadmierne komplikowanie rejestracji subkont poprzez np. oczekiwanie numeru telefonu, które oczywiście aplikacje nie posiadają.
+Jednak w ostatnich miesiącach została wprowadzona możliwość tworzenia subkont. Każde subkonto posiada własne klucze API. Oznacza to, że widzi tylko własne buckety, a więc - przykładowo - włamywacz nie ma dostępu do danych innych aplikacji. Wydaje się jednak, że funkcja subkont nie została zaprojektowana z myślą o seperacji aplikacji, a miało to na celu seperację użytkowników. Oznacza to pewne nadmierne komplikowanie rejestracji subkont poprzez np. oczekiwanie numeru telefonu, które oczywiście aplikacje nie posiadają.
 
 W ostatnim miesiącu zostało wprowadzone API do obsługi subkont. Można dzięki temu proces tworzenia subkont i przyznawania im uprawnień znacząco przyspieszyć. Jak również zwiększyć przejrzystość tego procesu analizując jakie dane może oglądać każde z kont.
 
-Końcowo wspomnę, że kliknięcie powyższego loga e24cloud zapewnia pdowojegnie pierwszej wpłaty.
+Końcowo wspomnę, że kliknięcie powyższego loga e24cloud zapewnia podwojenie pierwszej wpłaty.
+
 
 Instalacja
 ==========
@@ -27,7 +28,7 @@ git clone https://github.com/ad-m/e24files-assistant
 Instalacja zależności: 
 
 ```
-sudo apt-get install python-pip && sudo pip install requests
+sudo apt-get install python-pip && sudo pip install requests pydal
 ```
 
 Konfiguracja
@@ -55,4 +56,10 @@ Utworzenie bucketu i subkonta mu odpowiadającego:
 
 ```
 python create_user.py --config=config.ini test_creator 
+```
+
+Należy zaznaczyć, że aplikacja ``chart_usage.py`` nie wykorzystuje oficjalnego API e24cloud, ani pliku ``config.ini```. Dane dostępowe są pobierane z strony panelu administracyjnego z wykorzystaniem nieudokumentowanego eksportu do JSON. Wobec czego wymagane jest podanie danych do głównego konta użytkownika. Przykładowe wywołanie:
+
+```
+python chart_usage.py -u email@example.com -p "BestPassword" -o chart.svg -s 2015-01-01
 ```
