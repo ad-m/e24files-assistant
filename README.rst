@@ -21,9 +21,9 @@ Instalacja
 
 Kopiowanie kodu źródłowego: 
 
-``
-git clone https://github.com/ad-m/e24files-assistant
-``
+.. code::
+   
+   git clone https://github.com/ad-m/e24files-assistant
 
 Instalacja zależności: 
 
@@ -42,24 +42,25 @@ Przykłady użycia
 
 Zestawienie dostępu do bucketów z poszczególnych kont: 
 
-``
-python report.py --config=config.ini -o output.csv;
-``
+.. code::
 
-Utworzenie subkonta zapewniającego dodatkowego użytkownika bucketu ```test_creator```:
+   python report.py --config=config.ini -o output.csv;
 
-``
-python create_user.py --config=config.ini test_creator --user
-``
+
+Utworzenie subkonta zapewniającego dodatkowego użytkownika bucketu ``test_creator``:
+
+.. code::
+
+   python create_user.py --config=config.ini test_creator --user
 
 Utworzenie bucketu i subkonta mu odpowiadającego:
 
-``
-python create_user.py --config=config.ini test_creator 
-``
+.. code::
 
-Należy zaznaczyć, że aplikacja ``chart_usage.py`` nie wykorzystuje oficjalnego API e24cloud, ani pliku ``config.ini```. Dane dostępowe są pobierane z strony panelu administracyjnego z wykorzystaniem nieudokumentowanego eksportu do JSON. Wobec czego wymagane jest podanie danych do głównego konta użytkownika. Przykładowe wywołanie:
+   python create_user.py --config=config.ini test_creator 
 
-``
-python chart_usage.py -u email@example.com -p "BestPassword" -o chart.svg -s 2015-01-01
-``
+Należy zaznaczyć, że aplikacja ``chart_usage.py`` nie wykorzystuje oficjalnego API e24cloud, ani pliku ``config.ini``. Dane dostępowe są pobierane z strony panelu administracyjnego z wykorzystaniem nieudokumentowanego eksportu do JSON. Wobec czego wymagane jest podanie danych do głównego konta użytkownika. Przykładowe wywołanie:
+
+.. code::
+   
+   python chart_usage.py -u email@example.com -p "BestPassword" -o chart.svg -s 2015-01-01
