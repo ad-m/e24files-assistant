@@ -1,6 +1,8 @@
+#!/bin/python2.7
 from __future__ import print_function
 
 import argparse
+import csv
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pprint import pprint
@@ -66,7 +68,8 @@ def build_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--username", nargs=1, required=True, help="Username to e24cloud")
     parser.add_argument("-p", "--password", nargs=1, required=True, help="Password to e24cloud")
-    parser.add_argument("-o", "--output", required=True, help="Filename of output file")
+    parser.add_argument("-o", "--output", required=False, help="Filename of graphic output file")
+    parser.add_argument("-c", "--csv", required=False, help="Filename of CSV file")
     parser.add_argument('-s', "--startdate",
                         help="The start date - format YYYY-MM-DD (default: 90 days ago)",
                         default=(datetime.now() - timedelta(days=90)).date(),
@@ -82,6 +85,32 @@ def build_args():
     return parser.parse_args()
 
 
+def make_chart(start_date, end_date, labels, bills, filename):
+    line_chart = pygal.Line(x_label_rotation=85, )
+    line_chart.title = 'e24cloud bills evolution ' + \
+                       'in the period from %s to %s' % (start_date.strftime("%Y-%m-%d"),
+                                                        end_date.strftime("%Y-%m-%d"))
+    line_chart.x_labels = [str(x) for x, _, _ in bills]
+
+    for label in labels:
+        line_chart.add(label, [payment.get(label, None) for _, _, payment in bills])
+
+    line_chart.render_to_file(filename)
+    print("Chart saved in file %s " % (filename))
+
+
+def make_csv(labels, bills, filename):
+    with open(filename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=list(labels) + ['start', 'end'])
+        writer.writeheader()
+        for start, end, payment in bills:
+            row = payment.copy()
+            row['start'] = start
+            row['end'] = end
+            writer.writerow(row)
+    print("CSV saved in file %s " % (filename))
+
+
 def main():
     args = build_args()
     start_date = args.startdate
@@ -92,17 +121,13 @@ def main():
     labels, bills = get_bills(client, start_date, end_date, timedelta(days=resolution_days))
     pprint(bills)
 
-    line_chart = pygal.Line(x_label_rotation=85, )
-    line_chart.title = 'e24cloud bills evolution ' + \
-                       'in the period from %s to %s' % (start_date.strftime("%Y-%m-%d"),
-                                                        end_date.strftime("%Y-%m-%d"))
-    line_chart.x_labels = [str(x) for x, _, _ in bills]
+    if args.output:
+        make_chart(start_date, end_date, labels, bills, args.output)
+    if args.csv:
+        make_csv(labels, bills, args.csv)
 
-    for label in labels:
-        line_chart.add(label, [payment.get(label, None) for _, _, payment in bills])
-
-    line_chart.render_to_file(args.output)
-    print("Chart saved in file %s " % (args.output))
+    if not (args.csv or args.output):
+        print('No chart or CSV files generated. Use "-o" or "-c".')
 
 
 if __name__ == "__main__":
