@@ -28,7 +28,7 @@ Kopiowanie kodu źródłowego:
 Instalacja zależności: 
 
 ``
-sudo apt-get install python-pip && sudo pip install requests pydal
+sudo apt-get install python-pip && sudo pip install requests pydal python-dateutil
 ``
 
 Konfiguracja

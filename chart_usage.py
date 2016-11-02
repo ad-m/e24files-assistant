@@ -6,6 +6,7 @@ import csv
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pprint import pprint
+from dateutil.relativedelta import relativedelta
 
 import pygal
 import requests
@@ -64,6 +65,20 @@ def valid_date(s):
         raise argparse.ArgumentTypeError(msg)
 
 
+def valid_delta(s):
+    deltas = {'month': relativedelta(months=+1),
+              'year': relativedelta(years=+1),
+              'week': relativedelta(weeks=+1),
+              'quarter': relativedelta(months=3)}
+    if s in deltas:
+        return deltas[s]
+    try:
+        return relativedelta(days=int(s))
+    except ValueError:
+        msg = "Not a valid date: '{0}'.".format(s)
+        raise argparse.ArgumentTypeError(msg)
+
+
 def build_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--username", nargs=1, required=True, help="Username to e24cloud")
@@ -79,9 +94,9 @@ def build_args():
                         default=date.today(),
                         type=valid_date)
     parser.add_argument('--resolution',
-                        type=int,
-                        default=30,
-                        help='Resolution in days of chart (default: 30)')
+                        type=valid_delta,
+                        default=relativedelta(months=+1),
+                        help='Resolution in days of chart (default: month)')
     return parser.parse_args()
 
 
@@ -115,10 +130,9 @@ def main():
     args = build_args()
     start_date = args.startdate
     end_date = args.enddate
-    resolution_days = args.resolution
     client = Client()
     assert client.login(args.username, args.password) is True
-    labels, bills = get_bills(client, start_date, end_date, timedelta(days=resolution_days))
+    labels, bills = get_bills(client, start_date, end_date, args.resolution)
     pprint(bills)
 
     if args.output:
