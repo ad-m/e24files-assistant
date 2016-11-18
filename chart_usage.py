@@ -131,7 +131,7 @@ def main():
     start_date = args.startdate
     end_date = args.enddate
     client = Client()
-    assert client.login(args.username, args.password) is True
+    assert client.login(args.username, args.password) is True, "Authentication failed. Check username and password."
     labels, bills = get_bills(client, start_date, end_date, args.resolution)
     pprint(bills)
 
