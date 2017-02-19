@@ -63,4 +63,4 @@ Należy zaznaczyć, że aplikacja ``chart_usage.py`` nie wykorzystuje oficjalneg
 
 .. code::
    
-   python chart_usage.py -u email@example.com -p "BestPassword" -o chart.svg -s 2015-01-01
+   python chart_usage.py -u email@example.com -p "BestPassword" -g chart.svg -s 2015-01-01

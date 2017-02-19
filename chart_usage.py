@@ -14,7 +14,7 @@ import requests
 
 class Client(object):
     LOGIN_URL = 'https://panel.e24cloud.com/login/check'
-    HISTORY_URL = "https://panel.e24cloud.com/payments/history/"
+    HISTORY_URL = "https://panel.e24cloud.com/payments/history/format/json"
 
     def __init__(self, session=None):
         self.session = session or requests.Session()
@@ -27,74 +27,79 @@ class Client(object):
         return json['status'] == 1
 
     def payments_history(self, date_from, date_to):
-        resp = self.session.get(self.HISTORY_URL,
-                                params={'from': date_from.strftime("%Y-%m-%d"),
-                                        'to': date_to.strftime("%Y-%m-%d"),
-                                        'format': 'json'})
+        resp = self.session.post(self.HISTORY_URL,
+                                 json={'date_from': date_from.strftime("%Y-%m-%d"),
+                                       'date_to': date_to.strftime("%Y-%m-%d")})
         return resp.json()['rows']
 
 
-def daterange(start_date, end_date, delta=None):
-    d = start_date
-    delta = delta or datetime.timedelta(days=1)
-    while d <= end_date:
-        end_limited = end_date if d + delta > end_date else d + delta
-        yield d, end_limited
-        d += delta
+class Service(object):
+
+    def __init__(self, client):
+        self.client = client
+
+    def _daterange(self, start_date, end_date, delta=None):
+        d = start_date
+        delta = delta or datetime.timedelta(days=1)
+        while d <= end_date:
+            end_limited = end_date if d + delta > end_date else d + delta
+            yield d, end_limited
+            d += delta
+
+    def get_bills(self, start_date, end_date, delta):
+        labels = set()
+        bills = []
+        for range_start, range_end in self._daterange(start_date, end_date, delta):
+            print("Query for %s" % (range_start.strftime("%Y-%m-%d")))
+            data = self.client.payments_history(range_start, range_end)['resources']
+            labels.update(row['type'] for row in data)
+            payments = {}
+            for row in data:
+                payments[row['type']] = payments.get(row['type'], 0) + Decimal(row['amount'])
+            bills.append((range_start, range_end, payments))
+        return labels, bills
 
 
-def get_bills(client, start_date, end_date, delta):
-    labels = set()
-    bills = []
-    for range_start, range_end in daterange(start_date, end_date, delta):
-        print("Query for %s" % (range_start.strftime("%Y-%m-%d")))
-        data = client.payments_history(range_start, range_end)
-        labels.update(row['type'] for row in data)
-        payments = {}
-        for row in data:
-            payments[row['type']] = payments.get(row['type'], 0) + Decimal(row['amount'])
-        bills.append((range_start, range_end, payments))
-    return labels, bills
+class Validator(object):
+    @staticmethod
+    def valid_date(s):
+        try:
+            return datetime.strptime(s, "%Y-%m-%d").date()
+        except ValueError:
+            msg = "Not a valid date: '{0}'.".format(s)
+            raise argparse.ArgumentTypeError(msg)
 
-
-def valid_date(s):
-    try:
-        return datetime.strptime(s, "%Y-%m-%d").date()
-    except ValueError:
-        msg = "Not a valid date: '{0}'.".format(s)
-        raise argparse.ArgumentTypeError(msg)
-
-
-def valid_delta(s):
-    deltas = {'month': relativedelta(months=+1),
-              'year': relativedelta(years=+1),
-              'week': relativedelta(weeks=+1),
-              'quarter': relativedelta(months=3)}
-    if s in deltas:
-        return deltas[s]
-    try:
-        return relativedelta(days=int(s))
-    except ValueError:
-        msg = "Not a valid date: '{0}'.".format(s)
-        raise argparse.ArgumentTypeError(msg)
+    @staticmethod
+    def valid_delta(s):
+        deltas = {'month': relativedelta(months=+1),
+                  'year': relativedelta(years=+1),
+                  'week': relativedelta(weeks=+1),
+                  'quarter': relativedelta(months=3)}
+        if s in deltas:
+            return deltas[s]
+        try:
+            return relativedelta(days=int(s))
+        except ValueError:
+            msg = "Not a valid date: '{0}'.".format(s)
+            raise argparse.ArgumentTypeError(msg)
 
 
 def build_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--username", nargs=1, required=True, help="Username to e24cloud")
     parser.add_argument("-p", "--password", nargs=1, required=True, help="Password to e24cloud")
-    parser.add_argument("-o", "--output", required=False, help="Filename of graphic output file")
+    parser.add_argument("-g", "--graphic", required=False, help="Filename of graphic output file")
     parser.add_argument("-c", "--csv", required=False, help="Filename of CSV file")
     parser.add_argument('-s', "--startdate",
                         help="The start date - format YYYY-MM-DD (default: 90 days ago)",
                         default=(datetime.now() - timedelta(days=90)).date(),
-                        type=valid_date)
+                        type=Validator.valid_date)
     parser.add_argument('-e', "--enddate",
                         help="The end date - format YYYY-MM-DD (default: today)",
                         default=date.today(),
-                        type=valid_date)
+                        type=Validator.valid_date)
     parser.add_argument('--resolution',
-                        type=valid_delta,
+                        type=Validator.valid_delta,
                         default=relativedelta(months=+1),
                         help='Resolution in days of chart (default: month)')
     return parser.parse_args()
@@ -131,16 +136,17 @@ def main():
     start_date = args.startdate
     end_date = args.enddate
     client = Client()
-    assert client.login(args.username, args.password) is True, "Authentication failed. Check username and password."
-    labels, bills = get_bills(client, start_date, end_date, args.resolution)
-    pprint(bills)
+    assert client.login(args.username, args.password) is True, \
+        "Authentication failed. Check username and password."
+    service = Service(client)
+    labels, bills = service.get_bills(start_date, end_date, args.resolution)
 
-    if args.output:
-        make_chart(start_date, end_date, labels, bills, args.output)
+    if args.graphic:
+        make_chart(start_date, end_date, labels, bills, args.graphic)
     if args.csv:
         make_csv(labels, bills, args.csv)
 
-    if not (args.csv or args.output):
+    if not (args.csv or args.graphic):
         print('No chart or CSV files generated. Use "-o" or "-c".')
 
 
